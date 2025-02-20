@@ -135,7 +135,7 @@ namespace Wabbajack
                 var fvi = FileVersionInfo.GetVersionInfo(string.IsNullOrWhiteSpace(assemblyLocation) ? processLocation : assemblyLocation);
                 Consts.CurrentMinimumWabbajackVersion = Version.Parse(fvi.FileVersion);
                 VersionDisplay = $"v{fvi.FileVersion}";
-                AppName = "WABBAJACK " + VersionDisplay;
+                AppName = "WABBAJACK UNLOCKED (v1.1.0)";
                 _logger.LogInformation("Wabbajack Version: {FileVersion}", fvi.FileVersion);
 
                 Task.Run(() => _wjClient.SendMetric("started_wabbajack", fvi.FileVersion)).FireAndForget();
