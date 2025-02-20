@@ -445,9 +445,7 @@ public abstract class AInstaller<T>
         NextStep(Consts.StepHashing, "Hashing Archives", 0);
         _logger.LogInformation("Looking for files to hash");
 
-        var allFiles = _configuration.Downloads.EnumerateFiles()
-            .Concat(_gameLocator.GameLocation(_configuration.Game).EnumerateFiles())
-            .ToList();
+        var allFiles = _configuration.Downloads.EnumerateFiles().ToList();
 
         _logger.LogInformation("Getting archive sizes");
         var hashDict = (await allFiles.PMapAllBatched(_limiter, x => (x, x.Size())).ToList())

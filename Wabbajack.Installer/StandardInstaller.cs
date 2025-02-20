@@ -77,31 +77,6 @@ public class StandardInstaller : AInstaller<StandardInstaller>
         if (_configuration.GameFolder == default)
             _configuration.GameFolder = _gameLocator.GameLocation(_configuration.Game);
 
-        if (_configuration.GameFolder == default)
-        {
-            var otherGame = _configuration.Game.MetaData().CommonlyConfusedWith
-                .Where(g => _gameLocator.IsInstalled(g)).Select(g => g.MetaData()).FirstOrDefault();
-            if (otherGame != null)
-                _logger.LogError(
-                    "In order to do a proper install Wabbajack needs to know where your {lookingFor} folder resides. However this game doesn't seem to be installed, we did however find an installed " +
-                    "copy of {otherGame}, did you install the wrong game?",
-                    _configuration.Game.MetaData().HumanFriendlyGameName, otherGame.HumanFriendlyGameName);
-            else
-                _logger.LogError(
-                    "In order to do a proper install Wabbajack needs to know where your {lookingFor} folder resides. However this game doesn't seem to be installed.",
-                    _configuration.Game.MetaData().HumanFriendlyGameName);
-
-            return false;
-        }
-
-        if (!_configuration.GameFolder.DirectoryExists())
-        {
-            _logger.LogError("Located game {game} at \"{gameFolder}\" but the folder does not exist!",
-                _configuration.Game, _configuration.GameFolder);
-            return false;
-        }
-
-
         _logger.LogInformation("Install Folder: {InstallFolder}", _configuration.Install);
         _logger.LogInformation("Downloads Folder: {DownloadFolder}", _configuration.Downloads);
         _logger.LogInformation("Game Folder: {GameFolder}", _configuration.GameFolder);
