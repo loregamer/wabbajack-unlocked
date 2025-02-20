@@ -70,7 +70,6 @@ public class StandardInstaller : AInstaller<StandardInstaller>
     {
         if (token.IsCancellationRequested) return false;
         _logger.LogInformation("Installing: {Name} - {Version}", _configuration.ModList.Name, _configuration.ModList.Version);
-        await _wjClient.SendMetric(MetricNames.BeginInstall, ModList.Name);
         NextStep(Consts.StepPreparing, "Configuring Installer", 0);
         _logger.LogInformation("Configuring Processor");
 
@@ -144,7 +143,6 @@ public class StandardInstaller : AInstaller<StandardInstaller>
         SetScreenSizeInPrefs();
 
         await ExtractedModlistFolder!.DisposeAsync();
-        await _wjClient.SendMetric(MetricNames.FinishInstall, ModList.Name);
 
         NextStep(Consts.StepFinished, "Finished", 1);
         _logger.LogInformation("Finished Installation");
