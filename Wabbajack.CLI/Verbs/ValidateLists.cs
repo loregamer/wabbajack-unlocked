@@ -645,7 +645,13 @@ public class ValidateLists
                                            //TODO: Find a better solution for the list validation of LoversLab files.
                                            || http.Url.Host.EndsWith("loverslab.com")
                                            //TODO: Find a better solution for the list validation of Mediafire files.
-                                           || http.Url.Host.EndsWith("mediafire.com")))
+                                           || http.Url.Host.EndsWith("mediafire.com")
+                                           //TODO: Absolutely nothing, cause this is epic
+                                           || http.Url.Host.EndsWith("f.rpghq.org")
+                                           || http.Url.Host.EndsWith("rpghq.org")
+                                           || http.Url.Host.EndsWith("vault.rpghq.org")
+                                           || http.Url.Host.EndsWith("modhq.org")
+                                           || http.Url.Host.EndsWith("f.modhq.org")))
             return (ArchiveStatus.Valid, archive);
         
         try
