@@ -104,7 +104,9 @@ public class Client
         var d = new DeserializerBuilder()
             .WithNamingConvention(PascalCaseNamingConvention.Instance)
             .Build();
-        return d.Deserialize<ServerAllowList>(str);
+        var list = d.Deserialize<ServerAllowList>(str);
+        list.AllowedPrefixes = list.AllowedPrefixes.Concat(_configuration.AdditionalAllowedPrefixes).ToArray();
+        return list;
     }
 
     public async Task<Archive[]> LoadMirrors()
