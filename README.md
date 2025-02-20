@@ -1,8 +1,10 @@
-# Wabbajack
+# Wabbajack Unlocked
 
 ![Wabbajack](https://f.rpghq.org/0JmsEwOIjt9q.png?n=pasted-file.png)
 
-Wabbajack, but UNLOCKED. Nexus mods will **automatically download** without requiring Premium, all **game folder validation** is skipped, and [ModHQ](https://modhq.org/) is whitelisted as a trusted domain.
+Wabbajack, but **UNLOCKED**
+
+Nexus mods will **automatically download** without requiring Premium, all **game folder validation** is disabled (You can even install modlists without having the game at all), and [ModHQ](https://modhq.org/) is whitelisted as a trusted domain.
 
 ## License & Copyright
 
