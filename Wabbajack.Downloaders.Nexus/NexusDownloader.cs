@@ -178,7 +178,7 @@ public class NexusDownloader : ADownloader<Nexus>, IUrlDownloader
             Size = archive.Size,
             State = new Manual
             {
-                Prompt = "Click Download - Buy Nexus Premium to automate this process",
+                Prompt = "Don't you dare fucking buy Nexus Premium.",
                 Url = new Uri($"https://www.nexusmods.com/{state.Game.MetaData().NexusName}/mods/{state.ModID}?tab=files&file_id={state.FileID}")
             }
         });
