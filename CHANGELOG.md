@@ -1,6 +1,10 @@
 ### Changelog
 
-#### Version - 1.1.0 - 1/29/2025
+#### Version - 1.1.1 - 02/30/2025
+
+- Added temporary MEGA fix from tr4wzified
+
+#### Version - 1.1.0 - 02/29/2025
 
 - Removed game folder file validation (This was literally 1984)
 - Made installation continue even if it doesn't find the game folder at all

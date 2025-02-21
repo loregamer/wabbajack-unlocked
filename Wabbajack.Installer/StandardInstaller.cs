@@ -154,26 +154,31 @@ public class StandardInstaller : AInstaller<StandardInstaller>
         _logger.LogError("Writing Manual helper report");
         var report = _configuration.Downloads.Combine("MissingManuals.html");
         {
-            using var writer = new StreamWriter(report.Open(FileMode.Create, FileAccess.Write, FileShare.None));
-            writer.Write("<html><head><title>Missing Manual Downloads</title></head><body>");
-            writer.Write("<h1>Missing Manual Downloads</h1>");
+                        using var writer = new StreamWriter(report.Open(FileMode.Create, FileAccess.Write, FileShare.None));
+            writer.Write("<html><head><title>Missing Files</title></head><body>");
+            writer.Write("<h1>Missing Files</h1>");
             writer.Write(
-                "<p>Wabbajack was unable to download the following archives automatically. Please download them manually and place them in the downloads folder you chose during the install setup.</p>");
+                "<p>Wabbajack was unable to download the following files automatically. Please download them manually and place them in the downloads folder you chose during the install configuration.</p>");
             foreach (var archive in toArray)
             {
                 switch (archive.State)
                 {
                     case Manual manual:
-                        writer.Write($"<h3>{archive.Name}</h1>");
+                        writer.Write($"<h3>{archive.Name}</h3>");
                         writer.Write($"<p>{manual.Prompt}</p>");
                         writer.Write($"<p>Download URL: <a href=\"{manual.Url}\">{manual.Url}</a></p>");
                         break;
                     case MediaFire mediaFire:
-                        writer.Write($"<h3>{archive.Name}</h1>");
+                        writer.Write($"<h3>{archive.Name}</h3>");
                         writer.Write($"<p>Download URL: <a href=\"{mediaFire.Url}\">{mediaFire.Url}</a></p>");
                         break;
+                    case Mega mega:
+                        writer.Write($"<h3>MEGA: {archive.Name}</h3>");
+                        writer.Write($"<p>Please <a href='{mega.Url.ToString()}'>click here to download this file</a>, then manually place it inside the Wabbajack downloads directory.</p>");
+                        break;
+
                     default:
-                        writer.Write($"<h3>{archive.Name}</h1>");
+                        writer.Write($"<h3>{archive.Name}</h3>");
                         writer.Write($"<p>Unknown download type</p>");
                         writer.Write($"<p>Primary Key (may not be helpful): <a href=\"{archive.State.PrimaryKeyString}\">{archive.State.PrimaryKeyString}</a></p>");
                         break;
@@ -181,8 +186,9 @@ public class StandardInstaller : AInstaller<StandardInstaller>
             }
 
             writer.Write("</body></html>");
+
         }
-        
+
         Process.Start(new ProcessStartInfo("cmd.exe", $"start /c \"{report}\"")
         {
             CreateNoWindow = true,
