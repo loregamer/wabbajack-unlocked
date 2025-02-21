@@ -2,7 +2,8 @@
 
 #### Version - 1.2 - 02/30/2025
 
-- Removed a missing game file check I missed
+- Modified installation process to ignore missing game files (GameFileSource) while still enforcing other file requirements
+- Fixed VFS initialization and archive installation to properly handle missing game files
 
 #### Version - 1.1.1 - 02/30/2025
 
