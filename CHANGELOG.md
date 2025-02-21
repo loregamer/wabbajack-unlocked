@@ -1,5 +1,9 @@
 ### Changelog
 
+#### Version - 1.2 - 02/30/2025
+
+- Removed a missing game file check I missed
+
 #### Version - 1.1.1 - 02/30/2025
 
 - Added temporary MEGA fix from tr4wzified

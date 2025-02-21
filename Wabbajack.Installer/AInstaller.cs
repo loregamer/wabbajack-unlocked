@@ -430,7 +430,8 @@ public abstract class AInstaller<T>
         }
         catch (NotImplementedException) when (archive.State is GameFileSource)
         {
-            _logger.LogError("Missing game file {name}. This could be caused by missing DLC or a modified installation.", archive.Name);
+            _logger.LogWarning("Missing game file {name}. This could be caused by missing DLC or a modified installation.", archive.Name);
+            return true;
         }
         catch (Exception ex)
         {

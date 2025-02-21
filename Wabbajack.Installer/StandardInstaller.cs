@@ -99,17 +99,19 @@ public class StandardInstaller : AInstaller<StandardInstaller>
         var missing = ModList.Archives.Where(a => !HashedArchives.ContainsKey(a.Hash)).ToList();
         if (missing.Count > 0)
         {
-            if (missing.Any(m => m.State is not Nexus))
+            // Only show manual report for files that are neither Nexus nor GameFileSource
+            if (missing.Any(m => m.State is not Nexus && m.State is not GameFileSource))
             {
-                ShowMissingManualReport(missing.Where(m => m.State is not Nexus).ToArray());
+                ShowMissingManualReport(missing.Where(m => m.State is not Nexus && m.State is not GameFileSource).ToArray());
+                foreach (var a in missing.Where(m => m.State is not GameFileSource))
+                    _logger.LogCritical("Unable to download {name} ({primaryKeyString})", a.Name,
+                        a.State.PrimaryKeyString);
+                _logger.LogCritical("Cannot continue, was unable to download one or more archives");
                 return false;
             }
 
             foreach (var a in missing)
-                _logger.LogCritical("Unable to download {name} ({primaryKeyString})", a.Name,
-                    a.State.PrimaryKeyString);
-            _logger.LogCritical("Cannot continue, was unable to download one or more archives");
-            return false;
+            _logger.LogInformation("Continuing installation with missing files");
         }
 
         await ExtractModlist(token);
