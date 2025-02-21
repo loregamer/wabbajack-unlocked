@@ -201,8 +201,12 @@ public abstract class AInstaller<T>
     protected async Task PrimeVFS()
     {
         NextStep(Consts.StepPreparing, "Priming VFS", 0);
-        _vfs.AddKnown(_configuration.ModList.Directives.OfType<FromArchive>().Select(d => d.ArchiveHashPath),
-            HashedArchives);
+        var existingFiles = _configuration.ModList.Directives
+            .OfType<FromArchive>()
+            .Where(d => HashedArchives.ContainsKey(d.ArchiveHashPath.Hash))
+            .Select(d => d.ArchiveHashPath);
+            
+        _vfs.AddKnown(existingFiles, HashedArchives);
         await _vfs.BackfillMissing();
     }
 

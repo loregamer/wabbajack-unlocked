@@ -110,7 +110,6 @@ public class StandardInstaller : AInstaller<StandardInstaller>
                 return false;
             }
 
-            foreach (var a in missing)
             _logger.LogInformation("Continuing installation with missing files");
         }
 
