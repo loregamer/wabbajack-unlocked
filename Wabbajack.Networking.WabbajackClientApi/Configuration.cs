@@ -12,7 +12,6 @@ public class Configuration
 
     public string ResponseShaHeader { get; set; } = "x-content-sha";
 
-    public string[] AdditionalAllowedPrefixes { get; set; } = new[] { "https://rpghq.org/", "https://vault.rpghq.org/", "https://modhq.org/", "https://f.rpghq.org/" };
 
     public Uri ServerAllowList { get; set; } =
         new("https://raw.githubusercontent.com/wabbajack-tools/opt-out-lists/master/ServerWhitelist.yml");

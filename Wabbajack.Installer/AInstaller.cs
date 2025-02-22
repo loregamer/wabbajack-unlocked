@@ -201,12 +201,8 @@ public abstract class AInstaller<T>
     protected async Task PrimeVFS()
     {
         NextStep(Consts.StepPreparing, "Priming VFS", 0);
-        var existingFiles = _configuration.ModList.Directives
-            .OfType<FromArchive>()
-            .Where(d => HashedArchives.ContainsKey(d.ArchiveHashPath.Hash))
-            .Select(d => d.ArchiveHashPath);
-            
-        _vfs.AddKnown(existingFiles, HashedArchives);
+        _vfs.AddKnown(_configuration.ModList.Directives.OfType<FromArchive>().Select(d => d.ArchiveHashPath),
+            HashedArchives);
         await _vfs.BackfillMissing();
     }
 
@@ -227,7 +223,6 @@ public abstract class AInstaller<T>
         NextStep(Consts.StepInstalling, "Installing files", ModList.Directives.Sum(d => d.Size), x => x.ToFileSizeString());
         var grouped = ModList.Directives
             .OfType<FromArchive>()
-            .Where(d => HashedArchives.ContainsKey(d.ArchiveHashPath.Hash))
             .Select(a => new {VF = _vfs.Index.FileForArchiveHashPath(a.ArchiveHashPath), Directive = a})
             .GroupBy(a => a.VF)
             .ToDictionary(a => a.Key);
@@ -435,8 +430,7 @@ public abstract class AInstaller<T>
         }
         catch (NotImplementedException) when (archive.State is GameFileSource)
         {
-            _logger.LogWarning("Missing game file {name}. This could be caused by missing DLC or a modified installation.", archive.Name);
-            return true;
+            _logger.LogError("Missing game file {name}. This could be caused by missing DLC or a modified installation.", archive.Name);
         }
         catch (Exception ex)
         {
@@ -451,7 +445,9 @@ public abstract class AInstaller<T>
         NextStep(Consts.StepHashing, "Hashing Archives", 0);
         _logger.LogInformation("Looking for files to hash");
 
-        var allFiles = _configuration.Downloads.EnumerateFiles().ToList();
+        var allFiles = _configuration.Downloads.EnumerateFiles()
+            .Concat(_gameLocator.GameLocation(_configuration.Game).EnumerateFiles())
+            .ToList();
 
         _logger.LogInformation("Getting archive sizes");
         var hashDict = (await allFiles.PMapAllBatched(_limiter, x => (x, x.Size())).ToList())

@@ -70,11 +70,37 @@ public class StandardInstaller : AInstaller<StandardInstaller>
     {
         if (token.IsCancellationRequested) return false;
         _logger.LogInformation("Installing: {Name} - {Version}", _configuration.ModList.Name, _configuration.ModList.Version);
+        await _wjClient.SendMetric(MetricNames.BeginInstall, ModList.Name);
         NextStep(Consts.StepPreparing, "Configuring Installer", 0);
         _logger.LogInformation("Configuring Processor");
 
         if (_configuration.GameFolder == default)
             _configuration.GameFolder = _gameLocator.GameLocation(_configuration.Game);
+
+        if (_configuration.GameFolder == default)
+        {
+            var otherGame = _configuration.Game.MetaData().CommonlyConfusedWith
+                .Where(g => _gameLocator.IsInstalled(g)).Select(g => g.MetaData()).FirstOrDefault();
+            if (otherGame != null)
+                _logger.LogError(
+                    "In order to do a proper install Wabbajack needs to know where your {lookingFor} folder resides. However this game doesn't seem to be installed, we did however find an installed " +
+                    "copy of {otherGame}, did you install the wrong game?",
+                    _configuration.Game.MetaData().HumanFriendlyGameName, otherGame.HumanFriendlyGameName);
+            else
+                _logger.LogError(
+                    "In order to do a proper install Wabbajack needs to know where your {lookingFor} folder resides. However this game doesn't seem to be installed.",
+                    _configuration.Game.MetaData().HumanFriendlyGameName);
+
+            return false;
+        }
+
+        if (!_configuration.GameFolder.DirectoryExists())
+        {
+            _logger.LogError("Located game {game} at \"{gameFolder}\" but the folder does not exist!",
+                _configuration.Game, _configuration.GameFolder);
+            return false;
+        }
+
 
         _logger.LogInformation("Install Folder: {InstallFolder}", _configuration.Install);
         _logger.LogInformation("Downloads Folder: {DownloadFolder}", _configuration.Downloads);
@@ -99,18 +125,17 @@ public class StandardInstaller : AInstaller<StandardInstaller>
         var missing = ModList.Archives.Where(a => !HashedArchives.ContainsKey(a.Hash)).ToList();
         if (missing.Count > 0)
         {
-            // Only show manual report for files that are neither Nexus nor GameFileSource
-            if (missing.Any(m => m.State is not Nexus && m.State is not GameFileSource))
+            if (missing.Any(m => m.State is not Nexus))
             {
-                ShowMissingManualReport(missing.Where(m => m.State is not Nexus && m.State is not GameFileSource).ToArray());
-                foreach (var a in missing.Where(m => m.State is not GameFileSource))
-                    _logger.LogCritical("Unable to download {name} ({primaryKeyString})", a.Name,
-                        a.State.PrimaryKeyString);
-                _logger.LogCritical("Cannot continue, was unable to download one or more archives");
+                ShowMissingManualReport(missing.Where(m => m.State is not Nexus).ToArray());
                 return false;
             }
 
-            _logger.LogInformation("Continuing installation with missing files");
+            foreach (var a in missing)
+                _logger.LogCritical("Unable to download {name} ({primaryKeyString})", a.Name,
+                    a.State.PrimaryKeyString);
+            _logger.LogCritical("Cannot continue, was unable to download one or more archives");
+            return false;
         }
 
         await ExtractModlist(token);
@@ -144,6 +169,7 @@ public class StandardInstaller : AInstaller<StandardInstaller>
         SetScreenSizeInPrefs();
 
         await ExtractedModlistFolder!.DisposeAsync();
+        await _wjClient.SendMetric(MetricNames.FinishInstall, ModList.Name);
 
         NextStep(Consts.StepFinished, "Finished", 1);
         _logger.LogInformation("Finished Installation");
@@ -155,31 +181,26 @@ public class StandardInstaller : AInstaller<StandardInstaller>
         _logger.LogError("Writing Manual helper report");
         var report = _configuration.Downloads.Combine("MissingManuals.html");
         {
-                        using var writer = new StreamWriter(report.Open(FileMode.Create, FileAccess.Write, FileShare.None));
-            writer.Write("<html><head><title>Missing Files</title></head><body>");
-            writer.Write("<h1>Missing Files</h1>");
+            using var writer = new StreamWriter(report.Open(FileMode.Create, FileAccess.Write, FileShare.None));
+            writer.Write("<html><head><title>Missing Manual Downloads</title></head><body>");
+            writer.Write("<h1>Missing Manual Downloads</h1>");
             writer.Write(
-                "<p>Wabbajack was unable to download the following files automatically. Please download them manually and place them in the downloads folder you chose during the install configuration.</p>");
+                "<p>Wabbajack was unable to download the following archives automatically. Please download them manually and place them in the downloads folder you chose during the install setup.</p>");
             foreach (var archive in toArray)
             {
                 switch (archive.State)
                 {
                     case Manual manual:
-                        writer.Write($"<h3>{archive.Name}</h3>");
+                        writer.Write($"<h3>{archive.Name}</h1>");
                         writer.Write($"<p>{manual.Prompt}</p>");
                         writer.Write($"<p>Download URL: <a href=\"{manual.Url}\">{manual.Url}</a></p>");
                         break;
                     case MediaFire mediaFire:
-                        writer.Write($"<h3>{archive.Name}</h3>");
+                        writer.Write($"<h3>{archive.Name}</h1>");
                         writer.Write($"<p>Download URL: <a href=\"{mediaFire.Url}\">{mediaFire.Url}</a></p>");
                         break;
-                    case Mega mega:
-                        writer.Write($"<h3>MEGA: {archive.Name}</h3>");
-                        writer.Write($"<p>Please <a href='{mega.Url.ToString()}'>click here to download this file</a>, then manually place it inside the Wabbajack downloads directory.</p>");
-                        break;
-
                     default:
-                        writer.Write($"<h3>{archive.Name}</h3>");
+                        writer.Write($"<h3>{archive.Name}</h1>");
                         writer.Write($"<p>Unknown download type</p>");
                         writer.Write($"<p>Primary Key (may not be helpful): <a href=\"{archive.State.PrimaryKeyString}\">{archive.State.PrimaryKeyString}</a></p>");
                         break;
@@ -187,9 +208,8 @@ public class StandardInstaller : AInstaller<StandardInstaller>
             }
 
             writer.Write("</body></html>");
-
         }
-
+        
         Process.Start(new ProcessStartInfo("cmd.exe", $"start /c \"{report}\"")
         {
             CreateNoWindow = true,

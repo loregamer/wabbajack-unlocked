@@ -146,8 +146,7 @@ public class GameLocator : IGameLocator
     {
         if (TryFindLocation(game, out var path))
             return path;
-        _logger.LogWarning("Can't find game {game}, returning default path", game);
-        return default;
+        throw new Exception($"Can't find game {game}");
     }
 
     public bool IsInstalled(Game game)
