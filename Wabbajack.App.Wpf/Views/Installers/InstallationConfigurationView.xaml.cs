@@ -26,10 +26,6 @@ namespace Wabbajack
             InitializeComponent();
             this.WhenActivated(dispose =>
             {
-                this.WhenAny(x => x.ViewModel.Installer.ConfigVisualVerticalOffset)
-                    .Select(i => (double)i)
-                    .BindToStrict(this, x => x.InstallConfigSpacer.Height)
-                    .DisposeWith(dispose);
                 this.WhenAny(x => x.ViewModel.ModListLocation)
                     .BindToStrict(this, x => x.ModListLocationPicker.PickerVM)
                     .DisposeWith(dispose);

@@ -17,11 +17,9 @@
             <ColumnDefinition Width="20" />
             <ColumnDefinition Width="Auto" />
         </Grid.ColumnDefinitions>
-        <Grid Grid.Column="0" Margin="5" VerticalAlignment="Center" Background="Transparent">
+        <Grid Grid.Column="0" Margin="5,0,5,5" VerticalAlignment="Center" Background="Transparent">
             <!-- Added an extra row for Game Folder -->
             <Grid.RowDefinitions>
-                <RowDefinition Height="Auto" />
-                <!-- Row 0: InstallConfigSpacer -->
                 <RowDefinition Height="Auto" />
                 <!-- Row 1: Game Folder -->
                 <RowDefinition Height="Auto" />
@@ -36,27 +34,26 @@
                 <ColumnDefinition Width="20" />
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
-            <Rectangle x:Name="InstallConfigSpacer" Grid.Row="0" />
             <!-- Game Folder Picker -->
-            <TextBlock Grid.Row="1" Grid.Column="0"
+            <TextBlock Grid.Row="0" Grid.Column="0"
                 HorizontalAlignment="Right"
                 VerticalAlignment="Center"
                 FontSize="14"
                 Text="Game Folder"
                 TextAlignment="Center" />
-            <local:FilePicker Grid.Row="1" Grid.Column="2"
+            <local:FilePicker Grid.Row="0" Grid.Column="2"
                 x:Name="GameFolderPicker"
                 Height="30"
                 VerticalAlignment="Center"
                 FontSize="14" />
-            <!-- Target Modlist Picker (moved down to row 2) -->
-            <TextBlock Grid.Row="2" Grid.Column="0"
+            <!-- Target Modlist Picker -->
+            <TextBlock Grid.Row="1" Grid.Column="0"
                 HorizontalAlignment="Right"
                 VerticalAlignment="Center"
                 FontSize="14"
                 Text="Target Modlist"
                 TextAlignment="Center" />
-            <local:FilePicker Grid.Row="2" Grid.Column="2"
+            <local:FilePicker Grid.Row="1" Grid.Column="2"
                 x:Name="ModListLocationPicker"
                 Height="30"
                 VerticalAlignment="Center"
