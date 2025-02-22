@@ -33,6 +33,9 @@ namespace Wabbajack
                 this.WhenAny(x => x.ViewModel.ModListLocation)
                     .BindToStrict(this, x => x.ModListLocationPicker.PickerVM)
                     .DisposeWith(dispose);
+                this.WhenAny(x => x.ViewModel.GameFolder)
+                    .BindToStrict(this, x => x.GameFolderPicker.PickerVM)
+                    .DisposeWith(dispose);
                 this.WhenAny(x => x.ViewModel.Installer)
                     .BindToStrict(this, x => x.InstallerCustomizationContent.Content)
                     .DisposeWith(dispose);

@@ -144,9 +144,12 @@ public class GameLocator : IGameLocator
 
     public AbsolutePath GameLocation(Game game)
     {
-        if (TryFindLocation(game, out var path))
-            return path;
-        throw new Exception($"Can't find game {game}");
+        if (!TryFindLocation(game, out var path))
+        {
+            _logger.LogWarning("Can't find game {game}", game);
+            return default;
+        }
+        return path;
     }
 
     public bool IsInstalled(Game game)

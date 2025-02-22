@@ -445,12 +445,25 @@ public abstract class AInstaller<T>
         NextStep(Consts.StepHashing, "Hashing Archives", 0);
         _logger.LogInformation("Looking for files to hash");
 
-        var allFiles = _configuration.Downloads.EnumerateFiles()
-            .Concat(_gameLocator.GameLocation(_configuration.Game).EnumerateFiles())
-            .ToList();
+        var allFiles = _configuration.Downloads.EnumerateFiles();
+        
+        // If we have a manually set game folder, use that instead of auto-detection
+        if (_configuration.GameFolder != default)
+        {
+            allFiles = allFiles.Concat(_configuration.GameFolder.EnumerateFiles());
+        }
+        else 
+        {
+            var gameLocation = _gameLocator.GameLocation(_configuration.Game);
+            if (gameLocation != default)
+            {
+                allFiles = allFiles.Concat(gameLocation.EnumerateFiles());
+            }
+        }
+        var allFilesList = allFiles.ToList();
 
         _logger.LogInformation("Getting archive sizes");
-        var hashDict = (await allFiles.PMapAllBatched(_limiter, x => (x, x.Size())).ToList())
+        var hashDict = (await allFilesList.PMapAllBatched(_limiter, x => (x, x.Size())).ToList())
             .GroupBy(f => f.Item2)
             .ToDictionary(g => g.Key, g => g.Select(v => v.x));
 
@@ -460,7 +473,7 @@ public abstract class AInstaller<T>
 
         MaxStepProgress = toHash.Count;
 
-        _logger.LogInformation("Found {count} total files, {hashedCount} matching filesize", allFiles.Count,
+        _logger.LogInformation("Found {count} total files, {hashedCount} matching filesize", allFilesList.Count,
             toHash.Count);
 
         var hashResults = await

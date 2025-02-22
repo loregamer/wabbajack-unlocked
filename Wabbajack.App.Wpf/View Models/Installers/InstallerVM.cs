@@ -80,6 +80,9 @@ public class InstallerVM : BackNavigatingVM, IBackNavigatingVM, ICpuStatusVM
     public FilePickerVM ModListLocation { get; set; }
     
     [Reactive]
+    public FilePickerVM GameFolder { get; set; }
+    
+    [Reactive]
     public MO2InstallerVM Installer { get; set; }
     
     [Reactive]
@@ -205,6 +208,13 @@ public class InstallerVM : BackNavigatingVM, IBackNavigatingVM, ICpuStatusVM
             PromptTitle = "Select a ModList to install"
         };
         ModListLocation.Filters.Add(new CommonFileDialogFilter("Wabbajack Modlist", "*.wabbajack"));
+
+        GameFolder = new FilePickerVM
+        {
+            ExistCheckOption = FilePickerVM.CheckOptions.On,
+            PathType = FilePickerVM.PathTypeOptions.Folder,
+            PromptTitle = "Select Game Folder"
+        };
         
         OpenLogsCommand = ReactiveCommand.Create(() =>
         {
@@ -302,6 +312,28 @@ public class InstallerVM : BackNavigatingVM, IBackNavigatingVM, ICpuStatusVM
         {
             yield return ErrorResponse.Fail("Can't put the install folder inside the download folder");
         }
+
+        // Validate game folder
+        var gameFolder = GameFolder.TargetPath;
+        if (gameFolder == default)
+        {
+            yield return ErrorResponse.Fail("Game folder must be set");
+        }
+        else if (!gameFolder.DirectoryExists())
+        {
+            yield return ErrorResponse.Fail("Selected game folder does not exist");
+        }
+        else
+        {
+            var gameMetadata = ModList.GameType.MetaData();
+            var requiredFiles = gameMetadata.RequiredFiles;
+            var missingFiles = requiredFiles.Where(file => !gameFolder.Combine(file).FileExists()).ToList();
+            if (missingFiles.Any())
+            {
+                yield return ErrorResponse.Fail($"Selected folder is not a valid {gameMetadata.HumanFriendlyGameName} installation. Missing files: {string.Join(", ", missingFiles)}");
+            }
+        }
+
         foreach (var game in GameRegistry.Games)
         {
             if (!_gameLocator.TryFindLocation(game.Key, out var location))
@@ -535,6 +567,7 @@ public class InstallerVM : BackNavigatingVM, IBackNavigatingVM, ICpuStatusVM
                 ModListLocation = ModListLocation.TargetPath,
                 InstallLocation = Installer.Location.TargetPath,
                 DownloadLoadction = Installer.DownloadLocation.TargetPath,
+                GameFolder = GameFolder.TargetPath,
                 Metadata = ModlistMetadata
             });
             await _settingsManager.Save(LastLoadedModlist, ModListLocation.TargetPath);
@@ -549,7 +582,7 @@ public class InstallerVM : BackNavigatingVM, IBackNavigatingVM, ICpuStatusVM
                     ModList = ModList,
                     ModlistArchive = ModListLocation.TargetPath,
                     SystemParameters = _parametersConstructor.Create(),
-                    GameFolder = _gameLocator.GameLocation(ModList.GameType)
+                    GameFolder = GameFolder.TargetPath != default ? GameFolder.TargetPath : _gameLocator.GameLocation(ModList.GameType)
                 });
 
 
@@ -587,6 +620,14 @@ public class InstallerVM : BackNavigatingVM, IBackNavigatingVM, ICpuStatusVM
                 StatusText = $"Error during install of {ModList.Name}";
                 StatusProgress = Percent.Zero;
             }
+
+            var settings = await _settingsManager.Load<SavedInstallSettings>(InstallSettingsPrefix + postfix);
+            if (settings != null)
+            {
+                Installer.Location.TargetPath = settings.InstallLocation;
+                Installer.DownloadLocation.TargetPath = settings.DownloadLoadction;
+                GameFolder.TargetPath = settings.GameFolder;
+            }
         });
 
     }
@@ -597,7 +638,7 @@ public class InstallerVM : BackNavigatingVM, IBackNavigatingVM, ICpuStatusVM
         public AbsolutePath ModListLocation { get; set; }
         public AbsolutePath InstallLocation { get; set; }
         public AbsolutePath DownloadLoadction { get; set; }
-        
+        public AbsolutePath GameFolder { get; set; }
         public ModlistMetadata Metadata { get; set; }
     }
 
