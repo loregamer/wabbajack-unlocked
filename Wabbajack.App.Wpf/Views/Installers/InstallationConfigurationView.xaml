@@ -7,9 +7,9 @@
     xmlns:local="clr-namespace:Wabbajack"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:rxui="http://reactiveui.net"
+    x:TypeArguments="local:InstallerVM"
     d:DesignHeight="450"
     d:DesignWidth="800"
-    x:TypeArguments="local:InstallerVM"
     mc:Ignorable="d">
     <Grid Background="{StaticResource WindowBackgroundBrush}">
         <Grid.ColumnDefinitions>
@@ -17,15 +17,19 @@
             <ColumnDefinition Width="20" />
             <ColumnDefinition Width="Auto" />
         </Grid.ColumnDefinitions>
-        <Grid Grid.Column="0"
-            Margin="5"
-            VerticalAlignment="Center"
-            Background="Transparent">
+        <Grid Grid.Column="0" Margin="5" VerticalAlignment="Center" Background="Transparent">
+            <!-- Added an extra row for Game Folder -->
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
+                <!-- Row 0: InstallConfigSpacer -->
                 <RowDefinition Height="Auto" />
+                <!-- Row 1: Game Folder -->
+                <RowDefinition Height="Auto" />
+                <!-- Row 2: Target Modlist -->
                 <RowDefinition Height="5" />
+                <!-- Row 3: Spacer -->
                 <RowDefinition Height="*" />
+                <!-- Row 4: Error text & ContentPresenter -->
             </Grid.RowDefinitions>
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto" MinWidth="120" />
@@ -33,25 +37,38 @@
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
             <Rectangle x:Name="InstallConfigSpacer" Grid.Row="0" />
+            <!-- Game Folder Picker -->
             <TextBlock Grid.Row="1" Grid.Column="0"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Center"
+                FontSize="14"
+                Text="Game Folder"
+                TextAlignment="Center" />
+            <local:FilePicker Grid.Row="1" Grid.Column="2"
+                x:Name="GameFolderPicker"
+                Height="30"
+                VerticalAlignment="Center"
+                FontSize="14" />
+            <!-- Target Modlist Picker (moved down to row 2) -->
+            <TextBlock Grid.Row="2" Grid.Column="0"
                 HorizontalAlignment="Right"
                 VerticalAlignment="Center"
                 FontSize="14"
                 Text="Target Modlist"
                 TextAlignment="Center" />
+            <local:FilePicker Grid.Row="2" Grid.Column="2"
+                x:Name="ModListLocationPicker"
+                Height="30"
+                VerticalAlignment="Center"
+                FontSize="14" />
             <TextBlock x:Name="errorTextBox"
-                Grid.Row="3"
+                Grid.Row="4"
                 FontFamily="Verdana" FontSize="10" FontWeight="ExtraBold"
                 Background="{StaticResource WindowBackgroundBrush}"
                 Foreground="Red"
                 Text=""
                 TextAlignment="Left" Margin="0,79,0,-45" Grid.ColumnSpan="3" />
-            <local:FilePicker Grid.Row="1" Grid.Column="2"
-                x:Name="ModListLocationPicker"
-                Height="30"
-                VerticalAlignment="Center"
-                FontSize="14" />
-            <ContentPresenter Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="3"
+            <ContentPresenter Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="3"
                 x:Name="InstallerCustomizationContent"
                 VerticalAlignment="Top">
                 <ContentPresenter.Resources>
