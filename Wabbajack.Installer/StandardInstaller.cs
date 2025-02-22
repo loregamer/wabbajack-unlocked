@@ -77,30 +77,25 @@ public class StandardInstaller : AInstaller<StandardInstaller>
         if (_configuration.GameFolder == default)
             _configuration.GameFolder = _gameLocator.GameLocation(_configuration.Game);
 
+        // Log warnings about game folder issues but continue
         if (_configuration.GameFolder == default)
         {
             var otherGame = _configuration.Game.MetaData().CommonlyConfusedWith
                 .Where(g => _gameLocator.IsInstalled(g)).Select(g => g.MetaData()).FirstOrDefault();
             if (otherGame != null)
-                _logger.LogError(
-                    "In order to do a proper install Wabbajack needs to know where your {lookingFor} folder resides. However this game doesn't seem to be installed, we did however find an installed " +
-                    "copy of {otherGame}, did you install the wrong game?",
+                _logger.LogWarning(
+                    "Game folder not found for {lookingFor}. Found {otherGame} instead - this may cause issues.",
                     _configuration.Game.MetaData().HumanFriendlyGameName, otherGame.HumanFriendlyGameName);
             else
-                _logger.LogError(
-                    "In order to do a proper install Wabbajack needs to know where your {lookingFor} folder resides. However this game doesn't seem to be installed.",
+                _logger.LogWarning(
+                    "Game folder not found for {lookingFor}. This may cause issues.",
                     _configuration.Game.MetaData().HumanFriendlyGameName);
-
-            return false;
         }
-
-        if (!_configuration.GameFolder.DirectoryExists())
+        else if (!_configuration.GameFolder.DirectoryExists())
         {
-            _logger.LogError("Located game {game} at \"{gameFolder}\" but the folder does not exist!",
+            _logger.LogWarning("Located game {game} at \"{gameFolder}\" but the folder does not exist! This may cause issues.",
                 _configuration.Game, _configuration.GameFolder);
-            return false;
         }
-
 
         _logger.LogInformation("Install Folder: {InstallFolder}", _configuration.Install);
         _logger.LogInformation("Downloads Folder: {DownloadFolder}", _configuration.Downloads);
@@ -121,22 +116,6 @@ public class StandardInstaller : AInstaller<StandardInstaller>
 
         await HashArchives(token);
         if (token.IsCancellationRequested) return false;
-
-        var missing = ModList.Archives.Where(a => !HashedArchives.ContainsKey(a.Hash)).ToList();
-        if (missing.Count > 0)
-        {
-            if (missing.Any(m => m.State is not Nexus))
-            {
-                ShowMissingManualReport(missing.Where(m => m.State is not Nexus).ToArray());
-                return false;
-            }
-
-            foreach (var a in missing)
-                _logger.LogCritical("Unable to download {name} ({primaryKeyString})", a.Name,
-                    a.State.PrimaryKeyString);
-            _logger.LogCritical("Cannot continue, was unable to download one or more archives");
-            return false;
-        }
 
         await ExtractModlist(token);
         if (token.IsCancellationRequested) return false;
@@ -170,6 +149,24 @@ public class StandardInstaller : AInstaller<StandardInstaller>
 
         await ExtractedModlistFolder!.DisposeAsync();
         await _wjClient.SendMetric(MetricNames.FinishInstall, ModList.Name);
+
+        // Check for any missing files at the end of installation
+        var missing = ModList.Archives.Where(a => !HashedArchives.ContainsKey(a.Hash)).ToList();
+        if (missing.Count > 0)
+        {
+            var nonNexusFiles = missing.Where(m => m.State is not Nexus).ToArray();
+            if (nonNexusFiles.Any())
+            {
+                ShowMissingManualReport(nonNexusFiles);
+            }
+            else
+            {
+                foreach (var a in missing)
+                    _logger.LogCritical("Unable to download {name} ({primaryKeyString})", a.Name,
+                        a.State.PrimaryKeyString);
+                _logger.LogCritical("The following Nexus mods could not be downloaded automatically");
+            }
+        }
 
         NextStep(Consts.StepFinished, "Finished", 1);
         _logger.LogInformation("Finished Installation");

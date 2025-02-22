@@ -339,12 +339,11 @@ public abstract class AInstaller<T>
                 matches.First().State.PrimaryKeyString);
         }
         
-        
+        // Log validation failures but continue
         foreach (var archive in missing.Where(archive =>
                      !_downloadDispatcher.Downloader(archive).IsAllowed(validationData, archive.State)))
         {
-            _logger.LogCritical("File {primaryKeyString} failed validation", archive.State.PrimaryKeyString);
-            return;
+            _logger.LogWarning("File {primaryKeyString} failed validation", archive.State.PrimaryKeyString);
         }
 
         _logger.LogInformation("Downloading missing archives");
